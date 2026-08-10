@@ -3,18 +3,12 @@ name = "truebatour"
 pages_build_output_dir = "src"
 compatibility_date = "2026-07-17"
 
-[secrets]
-required = ["ADMIN_PASSWORD"]
-
 [[d1_databases]]
 binding = "DB"
 database_name = "primtour-mvp-db"
 database_id = "36c6612a-b440-459d-9425-e4f4c2c7b680"
 
 [env.production]
-
-[env.production.secrets]
-required = ["ADMIN_PASSWORD"]
 
 [[env.production.d1_databases]]
 binding = "DB"
