@@ -7,8 +7,8 @@ import crypto from "crypto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 4000);
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 const DATA_DIR = path.join(__dirname, "data");
 const BOOKINGS_FILE = path.join(DATA_DIR, "bookings.json");
 const PROVIDERS_FILE = path.join(DATA_DIR, "providers.json");
@@ -72,6 +72,13 @@ function requireFields(body, fields) {
   return missing.length ? `Missing required fields: ${missing.join(", ")}` : null;
 }
 
+function secretsMatch(provided, expected) {
+  if (!provided || !expected) return false;
+  const providedHash = crypto.createHash("sha256").update(provided).digest();
+  const expectedHash = crypto.createHash("sha256").update(expected).digest();
+  return crypto.timingSafeEqual(providedHash, expectedHash);
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -89,6 +96,11 @@ const server = http.createServer(async (req, res) => {
       const error = requireFields(body, ["name", "email", "whatsapp", "tour", "date", "people", "language"]);
       if (error) return sendJson(res, 400, { error });
 
+      const people = Number(body.people);
+      if (!Number.isInteger(people) || people < 1) {
+        return sendJson(res, 400, { error: "People must be a positive integer" });
+      }
+
       const booking = {
         id: id("BK"),
         status: "new",
@@ -98,7 +110,7 @@ const server = http.createServer(async (req, res) => {
         whatsapp: String(body.whatsapp).trim(),
         tour: String(body.tour).trim(),
         date: String(body.date).trim(),
-        people: Number(body.people),
+        people,
         language: String(body.language).trim(),
         pickup: String(body.pickup || "").trim(),
         comments: String(body.comments || "").trim(),
@@ -134,7 +146,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/admin/summary") {
-      if (req.headers["x-admin-password"] !== ADMIN_PASSWORD) {
+      if (!ADMIN_PASSWORD) {
+        return sendJson(res, 500, { error: "ADMIN_PASSWORD is not configured" });
+      }
+      if (!secretsMatch(req.headers["x-admin-password"], ADMIN_PASSWORD)) {
         return sendJson(res, 401, { error: "Invalid admin password" });
       }
       const bookings = await readJson(BOOKINGS_FILE);
@@ -144,8 +159,8 @@ const server = http.createServer(async (req, res) => {
 
     return sendJson(res, 404, { error: "Not found" });
   } catch (error) {
-    console.error(error);
-    return sendJson(res, 500, { error: error.message || "Internal server error" });
+    console.error(JSON.stringify({ message: "Legacy backend request failed", error: error instanceof Error ? error.message : String(error), path: url.pathname }));
+    return sendJson(res, 500, { error: "Internal server error" });
   }
 });
 

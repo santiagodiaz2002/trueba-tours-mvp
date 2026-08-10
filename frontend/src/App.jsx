@@ -2,7 +2,9 @@ import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
+const whatsappCandidate = import.meta.env.VITE_WHATSAPP_URL?.trim() || "";
+const WHATSAPP_URL = /^https:\/\/wa\.me\/\d+$/.test(whatsappCandidate) ? whatsappCandidate : "";
 
 const tours = [
   {
@@ -125,9 +127,9 @@ function BookingForm({ selectedTour, setSelectedTour }) {
   return (
     <form className="form" onSubmit={submit} id="booking-form">
       <div className="form-grid">
-        <label>Name<input required name="name" value={form.name} onChange={handleChange} placeholder="Jane Smith" /></label>
-        <label>Email<input required type="email" name="email" value={form.email} onChange={handleChange} placeholder="jane@email.com" /></label>
-        <label>WhatsApp<input required name="whatsapp" value={form.whatsapp} onChange={handleChange} placeholder="+1 555 000 000" /></label>
+        <label>Name<input required name="name" value={form.name} onChange={handleChange} placeholder="Full name" /></label>
+        <label>Email<input required type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email address" /></label>
+        <label>WhatsApp<input required name="whatsapp" value={form.whatsapp} onChange={handleChange} placeholder="Include country code" /></label>
         <label>Tour<select name="tour" value={form.tour} onChange={(e) => { handleChange(e); setSelectedTour(e.target.value); }}>{tours.map((tour) => <option key={tour.id} value={tour.id}>{tour.title}</option>)}</select></label>
         <label>Date<input required type="date" name="date" value={form.date} onChange={handleChange} /></label>
         <label>People<input required min="1" type="number" name="people" value={form.people} onChange={handleChange} /></label>
@@ -208,7 +210,7 @@ function AdminPanel() {
       <div className="container">
         <p className="eyebrow">Internal MVP</p>
         <h2>Admin summary</h2>
-        <p className="muted">Basic internal view for testing. Default password: <strong>admin123</strong>. Change it in backend/.env.</p>
+        <p className="muted">Internal view protected by the production admin secret.</p>
         <div className="admin-login">
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Admin password" />
           <button className="dark-btn" onClick={loadAdmin}>Load data</button>
@@ -218,7 +220,7 @@ function AdminPanel() {
           <div className="admin-grid">
             <Card><h3>{data.bookings.length}</h3><p>Bookings</p></Card>
             <Card><h3>{data.providers.length}</h3><p>Provider applications</p></Card>
-            <Card><h3>JSON</h3><p>Stored locally in backend/data</p></Card>
+            <Card><h3>D1</h3><p>Persistent application records</p></Card>
           </div>
         )}
       </div>
@@ -241,7 +243,9 @@ function App() {
             <a href="#guides">For guides</a>
             <a href="#admin">Admin</a>
           </nav>
-          <a className="btn" href="https://wa.me/5491111111111" target="_blank" rel="noreferrer">Book by WhatsApp</a>
+          {WHATSAPP_URL
+            ? <a className="btn" href={WHATSAPP_URL} target="_blank" rel="noreferrer">Book by WhatsApp</a>
+            : <a className="btn" href="#booking-form">Request by form</a>}
         </div>
       </header>
 
@@ -290,7 +294,7 @@ function App() {
 
         <section id="guides" className="guides-section"><div className="container split"><div><p className="eyebrow">For guides and drivers</p><h2>Work directly. Earn more.</h2><p className="muted">Apply to become a verified local guide or driver. Receive tour requests, accept the ones that fit your schedule and build your own reputation.</p></div><div className="provider-card"><h3>Apply as a provider</h3><p>We are onboarding English, Portuguese and Spanish-speaking guides, private drivers and local experience hosts in Buenos Aires.</p><ProviderForm /></div></div></section>
 
-        <section className="cta"><h2>Ready to explore Buenos Aires?</h2><p>Tell us your date, group size and preferred language. We will confirm your best available option by WhatsApp.</p><div className="actions center"><a className="btn" href="#booking-form">Book now</a><a className="btn btn-secondary" href="https://wa.me/5491111111111" target="_blank" rel="noreferrer">WhatsApp</a></div></section>
+        <section className="cta"><h2>Ready to explore Buenos Aires?</h2><p>Tell us your date, group size and preferred language. We will confirm your best available option by WhatsApp.</p><div className="actions center"><a className="btn" href="#booking-form">Book now</a>{WHATSAPP_URL && <a className="btn btn-secondary" href={WHATSAPP_URL} target="_blank" rel="noreferrer">WhatsApp</a>}</div></section>
 
         <AdminPanel />
       </main>

@@ -1,94 +1,32 @@
 # TrueBA Tours MVP
 
-Landing + backend funcional para validar reservas de tours privados en Buenos Aires.
+Landing React + Vite con API en Cloudflare Pages Functions y persistencia en D1.
 
-## Qué incluye
+## Desarrollo
 
-- Frontend React con Vite.
-- Backend Node.js + Express.
-- Formulario de reserva funcional.
-- Formulario para guías/choferes funcional.
-- Panel admin básico.
-- Base de datos simple en JSON local.
+Requisitos: Node.js 22 y npm 10.
 
-## Instalación
-
-```bash
-npm run install:all
+```powershell
+npm.cmd install
+npm.cmd run install:all
+npm.cmd run build
 ```
 
-## Correr en desarrollo
+El build productivo queda en `src/`. Para ejecutar Pages Functions localmente se necesita un binding D1 local llamado `DB` y una variable local `ADMIN_PASSWORD`; los secretos locales deben guardarse en `.dev.vars`, que está ignorado por Git.
 
-```bash
-npm run dev
-```
+## API
 
-Frontend:
+- `GET /api/health`
+- `POST /api/bookings`
+- `POST /api/providers`
+- `GET /api/admin/summary` con header `x-admin-password`
 
-```text
-http://localhost:5173
-```
+El esquema idempotente está en `schema.sql`. En producción el binding D1 debe llamarse exactamente `DB` y `ADMIN_PASSWORD` debe configurarse como secret de Pages, nunca como variable pública de Vite.
 
-Backend:
+## Configuración pública pendiente
 
-```text
-http://localhost:4000/api/health
-```
+El WhatsApp real TODAVÍA NO ESTÁ IDENTIFICADO. La landing no publica un número ficticio; el botón usa `VITE_WHATSAPP_URL` solo cuando se configura una URL pública válida durante el build.
 
-## Compilar frontend
+## Backend anterior
 
-```bash
-npm run build
-```
-
-El build queda en:
-
-```text
-frontend/dist
-```
-
-## Correr backend
-
-```bash
-npm run start
-```
-
-## Panel admin
-
-Dentro de la landing hay una sección `Admin`.
-
-Password por defecto:
-
-```text
-admin123
-```
-
-Cambiar en:
-
-```text
-backend/.env
-```
-
-Podés copiar `backend/.env.example` a `backend/.env`.
-
-## Datos guardados
-
-Las reservas se guardan en:
-
-```text
-backend/data/bookings.json
-```
-
-Las postulaciones de guías/choferes se guardan en:
-
-```text
-backend/data/providers.json
-```
-
-## Próximos pasos recomendados
-
-1. Reemplazar el teléfono de WhatsApp en `frontend/src/App.jsx`.
-2. Conectar Mercado Pago / Stripe.
-3. Conectar email automático con Brevo, Resend o Gmail SMTP.
-4. Pasar la base de datos de JSON a Supabase/PostgreSQL.
-5. Agregar login real para admin, guías y choferes.
+`backend/server.js` se conserva como referencia del MVP original, pero no forma parte del despliegue de Cloudflare Pages ni es el almacenamiento productivo.
